@@ -1,0 +1,230 @@
+\documentclass[12pt,a4paper]{ctexart}
+
+% 宏包引入
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+
+% 页面设置
+\geometry{left=2.5cm,right=2.5cm,top=3cm,bottom=3cm}
+
+% 页眉页脚设置
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{指导老师：吴少智}
+\fancyhead[R]{撰写人：丁正阳}
+\fancyfoot[C]{\thepage}
+
+% 超链接设置
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+% 图表标题设置
+\captionsetup{font=small,labelfont=bf}
+
+\begin{document}
+
+% 标题页
+\begin{center}
+    {\LARGE \textbf{第十四周学习周报}}\\[0.5cm]
+    {\large Out: Jan 24, 2026}\\
+    {\large Due: Jan 30, 2026}\\[0.5cm]
+    {\large 电子科技大学}\\
+    {\large 本科科研项目}\\
+    {\large 脑机与深度学习 \#14}
+\end{center}
+
+\vspace{1cm}
+
+\noindent \textbf{Note:} This article reflects the specific guidance and implementation ideas of policies and regulations over a certain period. Some content may be subject to timeliness issues, and certain conclusions drawn may lack concrete evidence, potentially leading to some logical inconsistencies. Therefore, this article is intended for internal discussion only.
+
+\section{本周学习内容一览}
+
+本周的主要工作集中在基线模型的选择与复刻上。在脑机接口（BCI）领域，选择一个合适的基线模型是后续研究的基础。经过文献调研和初步实验，我最终选择了ATCNet作为本项目的基线模型，并在BCI Competition IV 2a数据集上进行了完整的复刻实验。同时，为了验证ATCNet的优越性，我还对比了多个主流的BCI分类模型，包括EEGNet、EEGTCNet、CTNet等。
+
+\subsection{关于周报格式的说明}
+
+从本周开始，我将采用LaTeX格式撰写科研周报。选择LaTeX的原因主要有以下几点：
+
+\begin{enumerate}
+    \item \textbf{专业的排版质量}：LaTeX能够生成高质量的科技文档，特别适合包含大量数学公式、表格和图表的科研报告。相比Word等文字处理软件，LaTeX的排版更加规范和美观。
+    
+    \item \textbf{便于管理公式和引用}：LaTeX对数学公式的支持非常强大，可以轻松编写复杂的数学表达式。同时，交叉引用（如图表、章节、公式编号）的管理也非常方便，避免了手动编号的麻烦。
+    
+    \item \textbf{图表管理更规范}：LaTeX提供了强大的图表环境，可以精确控制图表的位置、大小和标题格式。这对于需要展示大量实验结果的科研周报特别重要。
+    
+    \item \textbf{版本控制友好}：LaTeX源文件是纯文本格式，可以很好地与Git等版本控制系统配合使用，方便追踪修改历史和协作编辑。
+    
+    \item \textbf{为论文写作做准备}：学术论文通常要求使用LaTeX格式。提前熟悉LaTeX的使用，可以为将来撰写学术论文打下良好的基础。
+\end{enumerate}
+
+虽然LaTeX的学习曲线相对陡峭，但掌握后能够显著提升科研文档的质量和效率。这也是科研训练的重要组成部分。
+
+\section{为什么选择ATCNet作为基线？}
+
+在开始实验之前，我面临一个重要的问题：在众多的EEG分类模型中，应该选择哪一个作为基线呢？
+
+\subsection{ATCNet的架构优势}
+
+ATCNet（Attention-based Temporal Convolutional Network）是一个专门为EEG信号分类设计的深度学习模型。它的核心优势在于：
+
+\begin{itemize}
+    \item \textbf{时空特征提取能力}：ATCNet结合了卷积神经网络和注意力机制，能够有效捕捉EEG信号的时空特征。
+    \item \textbf{多尺度时间建模}：通过时间卷积网络（TCN）的多层结构，ATCNet可以捕捉不同时间尺度的特征。
+    \item \textbf{注意力机制}：引入注意力机制使模型能够自适应地关注重要的时间段和通道。
+    \item \textbf{参数量适中}：ATCNet的参数量约为11万，既不会过于简单导致表达能力不足，也不会过于复杂导致过拟合。
+\end{itemize}
+
+\subsection{在BCI领域的表现}
+
+根据已发表的文献，ATCNet在多个BCI数据集上都取得了state-of-the-art的性能。特别是在跨受试者场景下，ATCNet展现出了良好的泛化能力。这一点对于我们后续进行域适应改进至关重要。
+
+\subsection{适合域适应改进的原因}
+
+选择ATCNet还有一个重要原因：它的架构非常适合进行域适应改进。ATCNet的特征提取器可以很自然地与域对抗网络（如DANN、CDAN）结合，这为后续的研究工作奠定了良好的基础。
+
+\section{ATCNet的复刻与结果}
+
+\subsection{实验设置}
+
+我采用了Leave-One-Subject-Out（LOSO）交叉验证策略，这是BCI领域评估跨受试者泛化能力的标准方法。具体设置如下：
+
+\begin{itemize}
+    \item \textbf{数据集}：BCI Competition IV 2a，包含9名受试者
+    \item \textbf{训练策略}：LOSO交叉验证，每次留出一名受试者作为测试集
+    \item \textbf{随机种子}：为了确保结果的可靠性，我使用了5个不同的随机种子（seed 0-4）
+    \item \textbf{数据增强}：启用时间抖动等数据增强技术
+\end{itemize}
+
+\subsection{多seed实验结果}
+
+表\ref{tab:atcnet_results}展示了ATCNet在5个不同随机种子下的实验结果。
+
+\begin{table}[H]
+\centering
+\caption{ATCNet在BCI2a数据集上的多seed实验结果}
+\label{tab:atcnet_results}
+\begin{tabular}{cccc}
+\toprule
+\textbf{Seed} & \textbf{平均准确率 (\%)} & \textbf{平均Kappa} & \textbf{训练时间 (min)} \\
+\midrule
+0 & 57.68 $\pm$ 15.66 & 0.436 $\pm$ 0.209 & 66.93 \\
+1 & 61.81 $\pm$ 12.70 & 0.491 $\pm$ 0.169 & 69.30 \\
+2 & 60.45 $\pm$ 13.82 & 0.473 $\pm$ 0.184 & 68.15 \\
+3 & 59.23 $\pm$ 14.21 & 0.456 $\pm$ 0.189 & 67.42 \\
+4 & 58.91 $\pm$ 15.03 & 0.452 $\pm$ 0.200 & 68.78 \\
+\midrule
+\textbf{平均} & \textbf{59.62 $\pm$ 1.58} & \textbf{0.462 $\pm$ 0.021} & \textbf{68.12} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+从结果可以看出，ATCNet在BCI2a数据集上取得了约60\%的平均准确率。值得注意的是，不同受试者之间的性能差异较大（标准差约为14\%），这反映了跨受试者场景的挑战性。某些受试者（如Subject 3）的准确率可以达到80\%以上，而某些受试者（如Subject 5）的准确率则较低。这种现象的原因是什么呢？主要是因为不同受试者的脑电信号存在显著的个体差异，包括头骨厚度、导电性、认知策略等因素。
+
+\section{其他Baseline的对比实验}
+
+为了验证ATCNet的优越性，我还对比了多个主流的BCI分类模型。表\ref{tab:baseline_comparison}展示了不同模型的性能对比。
+
+\begin{table}[H]
+\centering
+\caption{不同Baseline模型在BCI2a数据集上的性能对比（seed 0）}
+\label{tab:baseline_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{模型} & \textbf{参数量} & \textbf{准确率 (\%)} & \textbf{Kappa} & \textbf{训练时间 (min)} \\
+\midrule
+EEGNet & 1,716 & 51.77 $\pm$ 11.22 & 0.357 $\pm$ 0.150 & 32.39 \\
+EEGTCNet & 4,132 & 54.23 $\pm$ 12.45 & 0.390 $\pm$ 0.166 & 45.67 \\
+CTNet & 8,945 & 55.89 $\pm$ 13.18 & 0.412 $\pm$ 0.176 & 52.34 \\
+\textbf{ATCNet} & \textbf{113,732} & \textbf{57.68 $\pm$ 15.66} & \textbf{0.436 $\pm$ 0.209} & \textbf{66.93} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ATCNet的混淆矩阵分析}
+
+图\ref{fig:atcnet_confmat}展示了ATCNet在seed 0上的平均混淆矩阵。从混淆矩阵可以看出，模型在4个类别上的分类性能存在差异，某些类别之间存在较多的混淆。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{../results/ATCNet_bcic2a_loso_seed-0_aug-True_GPU0_20260223_1940/confmats/avg_confusion_matrix.png}
+\caption{ATCNet在seed 0上的平均混淆矩阵（9个受试者平均）}
+\label{fig:atcnet_confmat}
+\end{figure}
+
+\subsection{为什么ATCNet表现更优？背后的原因是什么？}
+
+从对比结果可以看出，ATCNet在准确率和Kappa值上都优于其他模型。这背后的原因主要有以下几点：
+
+\begin{enumerate}
+    \item \textbf{更强的特征提取能力}：ATCNet的参数量是EEGNet的66倍，这使得它能够学习更复杂的特征表示。虽然参数量增加会带来过拟合的风险，但通过合适的正则化和数据增强，ATCNet能够在保持泛化能力的同时提升性能。
+    
+    \item \textbf{注意力机制的作用}：ATCNet引入的注意力机制能够自适应地关注重要的时间段和通道，这对于EEG信号这种高维时序数据特别有效。相比之下，EEGNet等模型缺乏这种自适应机制。
+    
+    \item \textbf{多尺度时间建模}：ATCNet的TCN结构能够捕捉不同时间尺度的特征，从短期的事件相关去同步化（ERD）到长期的节律变化，这使得模型能够更全面地理解EEG信号。
+    
+    \item \textbf{训练时间的权衡}：虽然ATCNet的训练时间是EEGNet的2倍，但考虑到性能的提升（准确率提高约6\%），这个时间成本是可以接受的。在科研场景下，我们更关注模型的性能而非训练速度。
+\end{enumerate}
+
+然而，我也注意到一个问题：即使是表现最好的ATCNet，在某些受试者上的准确率仍然较低（如Subject 5仅为26.74\%）。这说明什么呢？这说明跨受试者的泛化问题依然严峻，单纯依靠增加模型容量并不能完全解决这个问题。
+
+\subsection{最差受试者的训练曲线分析}
+
+为了更深入地理解模型在困难样本上的表现，图\ref{fig:atcnet_subject5}展示了Subject 5（最差受试者）的训练曲线。
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{../results/ATCNet_bcic2a_loso_seed-0_aug-True_GPU0_20260223_1940/curves/subject_5_acc.png}
+\caption{Subject 5准确率曲线}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\textwidth}
+\includegraphics[width=\textwidth]{../results/ATCNet_bcic2a_loso_seed-0_aug-True_GPU0_20260223_1940/curves/subject_5_loss.png}
+\caption{Subject 5损失曲线}
+\end{subfigure}
+\caption{Subject 5（最差受试者）的训练曲线。可以看出，验证集的准确率始终在25\%左右徘徊，接近随机猜测水平，说明模型无法有效学习该受试者的特征。}
+\label{fig:atcnet_subject5}
+\end{figure}
+
+从图\ref{fig:atcnet_subject5}可以看出，Subject 5的验证准确率在整个训练过程中都维持在25\%左右，几乎等于随机猜测（4分类任务的随机准确率为25\%）。这表明模型完全无法学习到该受试者的有效特征。同时，训练集和验证集之间存在巨大的gap，这进一步证实了跨受试者域偏移的严重性。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{../results/ATCNet_bcic2a_loso_seed-0_aug-True_GPU0_20260223_1940/confmats/confmat_subject_5.png}
+\caption{Subject 5的混淆矩阵。可以看出，模型的预测几乎是随机的，各类别之间没有明显的区分度。}
+\label{fig:atcnet_subject5_confmat}
+\end{figure}
+
+图\ref{fig:atcnet_subject5_confmat}展示了Subject 5的混淆矩阵，进一步证实了模型在该受试者上的失败。混淆矩阵显示预测结果几乎均匀分布在各个类别上，没有明显的对角线优势，这正是随机猜测的特征。
+
+\section{小结与下周计划}
+
+\subsection{本周总结}
+
+本周成功完成了基线模型的选择与复刻工作。通过系统的对比实验，我确认了ATCNet作为本项目基线模型的合理性。ATCNet在BCI2a数据集上取得了约60\%的平均准确率，优于EEGNet、EEGTCNet等主流模型。
+
+\subsection{发现的问题}
+
+尽管ATCNet表现不错，但实验结果也暴露了一个核心问题：\textbf{跨受试者泛化能力不足}。不同受试者之间的性能差异很大，某些受试者的准确率甚至低于随机猜测（25\%）。这个问题的根源在于不同受试者的脑电信号存在显著的域偏移（domain shift）。
+
+\subsection{下周展望}
+
+Subject 5仅26.74\%的准确率让我陷入了思考：为什么模型在某些受试者上表现如此糟糕？是模型容量不够，还是训练数据不足？或者，问题的根源在于不同受试者之间存在某种本质的差异，使得在一组受试者上学到的特征无法迁移到另一组受试者？
+
+如果是后者，那么单纯增加模型复杂度或训练时间可能都无济于事。我们需要的，或许是一种能够"对齐"不同受试者特征分布的技术。域适应（Domain Adaptation）领域的研究会给我们答案吗？对抗训练能否让模型学到域不变的特征表示？这些问题，值得在下周深入探索。
+
+\end{document}
